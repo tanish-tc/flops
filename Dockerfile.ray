@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+WORKDIR /app
+
+# Force CPU-only PyTorch first to save massive amounts of disk space
+RUN pip install --no-cache-dir torch --extra-index-url https://download.pytorch.org/whl/cpu
+
+# Install Ray Serve and the rest of our stack without caching
+RUN pip install --no-cache-dir "ray[serve]" fastapi uvicorn transformers optimum[onnxruntime]
+
+COPY onnx_model/ ./onnx_model/
+COPY app_ray.py .
+CMD ["serve", "run", "app_ray:entrypoint", "--host", "0.0.0.0", "--port", "8002"]
