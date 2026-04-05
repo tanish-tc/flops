@@ -26,5 +26,17 @@ class DeadlineDeployment:
         deadlines = [{"extracted_text": e["word"], "event_type": "DUE_DATE", "confidence": float(e["score"])} for e in results]
         return {"document_id": req.document_id, "deadlines": deadlines}
 
-# Bind the deployment so Ray can run it
+# Bind the deployment
 entrypoint = DeadlineDeployment.bind()
+
+# NEW: Launch Ray Serve natively through Python instead of the CLI
+if __name__ == "__main__":
+    ray.init()
+    # Explicitly force Ray to listen on port 8002 and allow external connections
+    serve.start(http_options={"host": "0.0.0.0", "port": 8002})
+    serve.run(entrypoint)
+    
+    # Keep the container alive
+    import time
+    while True:
+        time.sleep(10)
